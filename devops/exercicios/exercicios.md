@@ -54,7 +54,7 @@ Com os pacotes instalados, agora iremos baixar o código fonte e começaremos a 
 $ cd /home/ubuntu
 $ git clone https://github.com/bentothiago/devops
 $ cd devops/exercicios/app
-```
+````
 
 
 #### Container=REDIS
