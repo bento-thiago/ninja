@@ -52,7 +52,7 @@ $ ln -s /usr/local/bin/docker-compose /usr/bin/docker-compose
 Com os pacotes instalados, agora iremos baixar o código fonte e começaremos a fazer os build's e rodar os containers.
 ```sh
 $ cd /home/ubuntu
-$ git clone https://github.com/jonathanbaraldi/devops
+$ git clone https://github.com/bentothiago/devops
 $ cd devops/exercicios/app
 ```
 
