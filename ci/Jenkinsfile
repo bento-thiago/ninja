@@ -61,7 +61,10 @@ node('aws-codebuild') {
         stage('Pipeline Prod'){
             sh "ansible-playbook ${PLAYBOOK} -e 'build_path=${WORKSPACE} env=prod'"
         }
-
+    else {
+        stage('Build Docker Image'){
+            sh "ansible-playbook ${PLAYBOOK} -e 'build_path=${WORKSPACE} env=test'"
+        }
         // emailext(
         //     to: 'suporte3@nasajon.com.br',
         //     subject: "Liberação Diário Único em Produção: '${env.JOB_NAME} [${env.BUILD_NUMBER}]'",
