@@ -12,17 +12,7 @@ node('aws-codebuild') {
         }
     }
 
-    stage('Environment Config') {
-        sh "auto_config"
-    }
-    
-    stage('Config'){
-        sh 'mkdir app/logs'
-        sh 'touch app/logs/test.log'
-        sh 'cp app/config/parameters.docker.dist app/config/parameters.yml'
-        sh 'cp common.env.dist common.env'
-        //sh "sed -i -e 's/assets_version:/assets_version: v${buildName}/g' app/config/parameters.docker.dist"
-    }
+   
 	
     stage('Composer With Dev Dependencies'){
         docker.image("nasajon/composer:1.7.2").inside("-v /root/.ssh:/root/.ssh") {
