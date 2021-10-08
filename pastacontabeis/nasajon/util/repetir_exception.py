@@ -1,0 +1,2 @@
+class RepetirException(Exception):
+    pass

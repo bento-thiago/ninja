@@ -1,0 +1,10 @@
+from enum import Enum
+
+class SituacaoInfoPagamento(Enum):
+    PREVISTO = "PREVISTO"
+    PENDENTE = "PENDENTE"
+    AGENDADO = "AGENDADO"
+    PENDENTE_AUTORIZACAO = "PENDENTE_AUTORIZACAO"
+    QUITADO = "QUITADO"
+    ERRO = "ERRO"
+    REJEITADO = "REJEITADO"

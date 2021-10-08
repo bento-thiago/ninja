@@ -1,0 +1,15 @@
+<html>
+    <head>
+        <title>Hora do servidor</title>
+    </head>
+    <body>
+        <h1>
+            Hora do Servidor
+        </h1>
+        <form action="/time" method="post">
+            {% csrf_token %}
+            {{ form }}
+            <input type="submit" value="Submit">
+        </form>
+    </body>
+</html>

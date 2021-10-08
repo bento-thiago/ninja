@@ -1,0 +1,122 @@
+version: "2"
+
+services:
+  app:
+    image: nasajon/django:latest
+    ports:
+      - "82:80"
+    command: sh -c "apk update && apk --update add tzdata &&  apk add --no-cache mariadb-dev && python3 -m pip install -r requirements.txt && echo "America/Sao_Paulo" >  /etc/timezone && /entrypoint.sh"
+    volumes:
+      - .:/var/www/html
+    env_file:
+      - common.env
+
+
+  celery:
+    image: nasajon/django:latest
+    command: sh -c "apk update && apk add --no-cache mariadb-dev && python3 -m pip install -r requirements.txt && celery -A nasajon worker -l info"
+    volumes:
+      - $PWD:/var/www/html
+    env_file:
+      - common.env
+
+  postgres:
+    image: postgres:11.4
+    restart: always
+    ports:
+      - "5432:5432"
+    volumes:
+      - $PWD/database/dump:/docker-entrypoint-initdb.d/
+    environment:
+      - "POSTGRES_DB=condominio_jobs"
+      - "POSTGRES_USER=postgres"
+      - "POSTGRES_PASSWORD=postgres"
+
+  chrome:
+    image: selenium/standalone-chrome
+    volumes:
+      - $PWD/downloads:/home/seluser/Downloads
+    ports:
+      - "4444:4444"
+    environment:
+      - "NODE_MAX_INSTANCES=10"
+      - "NODE_MAX_SESSION=10"
+    shm_size: '2gb'
+
+  rabbitmq:
+    image: "bitnami/rabbitmq:latest"
+    restart: always
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    environment:
+      - RABBITMQ_USERNAME=rabbit_user
+      - RABBITMQ_PASSWORD=my_secret_password
+
+  memsql:
+    build: ./database/inicializacao
+    ports:
+      - 3306:3306
+      - 8080:8080
+    environment:
+      - ROOT_PASSWORD=nasajon
+      - LICENSE_KEY=BDI5N2M0N2M1NWNkZTQzNmFiMTU1ZTEzMjNmY2JiMDJmAAAAAAAAAAAEAAAAAAAAAAwwNQIYIN/Bhr8jwJApNG6mq1aHI3Ep0ugzTkaRAhkA4ImSi5m0cfJmYn87YfNbc8Hp8LhlAwJbAA==
+
+
+  migration_diario:
+    image: nasajon/django:latest
+    command: sh -c "apk update && apk add --no-cache mariadb-dev && python3 -m pip install -r requirements.txt && python3 manage.py migrate diario_unico --database default"
+    volumes:
+      - .:/var/www/html
+    env_file:
+      - common.env
+
+  migration_condominiojobs:
+    image: nasajon/django:latest
+    command: sh -c "apk update && apk add --no-cache mariadb-dev && python3 -m pip install -r requirements.txt && python3 manage.py migrate app --database default"
+    volumes:
+      - $PWD:/var/www/html
+    env_file:
+      - common.env
+
+  redis:
+    image: redis
+    restart: always
+    ports:
+      - 6379:6379
+
+  maria_diario:
+    image: mariadb/columnstore:latest
+    ports:
+      - 3307:3306
+    environment:
+      - MARIADB_ROOT_HOST=%
+      - MARIADB_ROOT_PASSWORD=nasajon
+      - MARIADB_DATABASE=nasajon
+      - MARIADB_USER=joao
+      - MARIADB_PASSWORD=nasajon
+      - MYSQL_ROOT_HOST=%
+
+  
+
+
+  mariadb:
+    image: 'bitnami/mariadb:latest'
+    ports:
+      - "4306:3306"
+    volumes:
+      - ./mariadb_data_local:/bitnami
+    env_file:
+      - mariadb.env
+
+  jasperreports:
+    image: bitnami/jasperreports:latest
+    depends_on:
+      - mariadb
+    ports:
+      - '3000:8080'
+      - '443:8443'
+    volumes:
+      - ./jasperreports_data_local:/bitnami
+    env_file:
+      - jasperserver.env

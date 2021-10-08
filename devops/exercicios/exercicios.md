@@ -7,7 +7,7 @@
 
 - Domínio usado pelo instrutor do curso é: dev-ops-ninja.com
 
-https://github.com/jonathanbaraldi/devops
+https://github.com/bentothiago/ninja
 
 
 # Aula 4 - Ambiente
@@ -52,7 +52,7 @@ $ ln -s /usr/local/bin/docker-compose /usr/bin/docker-compose
 Com os pacotes instalados, agora iremos baixar o código fonte e começaremos a fazer os build's e rodar os containers.
 ```sh
 $ cd /home/ubuntu
-$ git clone https://github.com/bentothiago/devops
+$ git clone https://github.com/bentothiago/ninja
 $ cd devops/exercicios/app
 ````
 
@@ -153,7 +153,7 @@ Nesse exercício iremos instalar o Rancher 2.2.5 versão single node. Isso signi
 Entrar no host A, que será usado para hospedar o Rancher Server. Iremos verficar se não tem nenhum container rodando ou parado, e depois iremos instalar o Rancher.
 ```sh
 $ docker ps -a
-$ docker run -d --name rancher --restart=unless-stopped -v /opt/rancher:/var/lib/rancher  -p 80:80 -p 443:443 rancher/rancher:v2.4.3
+$ docker run -d --name rancher --restart=unless-stopped -v  /opt/rancher:/var/lib/rancher  -p 80:80 -p 443:443 rancher/rancher:v2.4.3
 ```
 Com o Rancher já rodando, irei adicionar a entrada de cada DNS para o IP de cada máquina.
 
@@ -187,7 +187,7 @@ Adicionar o host B e host C.
 
 Pegar o seu comando no seu rancher.
 ```sh
-$ docker run -d --privileged --restart=unless-stopped --net=host -v /etc/kubernetes:/etc/kubernetes -v /var/run:/var/run rancher/rancher-agent:v2.4.3 --server https://rancher.dev-ops-ninja.com --token 8xf5r2ttrvvqcxdhwsbx9cvb7s9wgwdmgfbmzr4mt7smjbg4jgj292 --ca-checksum 61ac25d1c389b26c5c9acd98a1c167dbfb394c6c1c3019d855901704d8bae282 --node-name k8s-1 --etcd --controlplane --worker
+sudo docker run -d --privileged --restart=unless-stopped --net=host -v /etc/kubernetes:/etc/kubernetes -v /var/run:/var/run rancher/rancher-agent:v2.4.3 --server https://35.230.62.101 --token 49drztlr4zk5ggs27hql9fm7vwk6jsj7jszskm4d9rhbtgw78hfjrw --ca-checksum c212d081836fe144233054043fd357487a5fc86a41a9d0265ff16839f2243ce1 --node-name k8s-1 --etcd --controlplane --worker
 ```
 Será um cluster com 3 nós.
 Navegar pelo Rancher e ver os painéis e funcionalidades.

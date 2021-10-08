@@ -1,0 +1,12 @@
+*.env
+common.env
+.vscode
+*.pyc
+__pycache__
+database/dump
+rabbitmqstats_data
+/.project
+jasperreports_data_local/tomcat/*
+mariadb_data_local/*
+init_mariadb_root.py
+.idea/*

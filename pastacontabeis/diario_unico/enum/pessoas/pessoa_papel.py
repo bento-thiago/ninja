@@ -1,0 +1,8 @@
+from enum import Enum
+
+class PessoaPapel(Enum):
+    CLIENTE='CLIENTE'
+    FORNECEDOR='FORNECEDOR'
+    TRANSPORTADORA='TRANSPORTADORA'
+    VENDEDOR='VENDEDOR'
+    NAO_DEFINIDO='NÃO_DEFINIDO'
