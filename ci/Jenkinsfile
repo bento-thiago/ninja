@@ -1,108 +1,31 @@
 node('aws-codebuild') {
-    def buildName = (env.BRANCH_NAME != 'production') ? "${env.BRANCH_NAME}-${BUILD_NUMBER}" : "${BUILD_NUMBER}"
-    def PLAYBOOK = "/opt/devops/Ansible/ci.yml"
 
-    stage('Clean') {
-        deleteDir()
-    }
-
-    stage('Fetch') {
+   stage('Fetch') {
         timeout(time: 60, unit: 'SECONDS') {
             checkout scm
         }
     }
-
-   
-	
-    stage('Composer With Dev Dependencies'){
-        docker.image("nasajon/composer:1.7.2").inside("-v /root/.ssh:/root/.ssh") {
-            sh 'composer install --prefer-dist --optimize-autoloader --no-scripts --ignore-platform-reqs'
-        }
-    }
-
-    stage('NodeDeps') {
-        docker.image("nasajon/yarn:1.9.4").inside("-v /root/.ssh:/root/.ssh") {
-            sh 'yarn install'
-        }
-    }
-        
-    stage('Build') {
-        docker.image('nasajon/php-node').inside("-v /root/.ssh:/root/.ssh -e NODE_ENV=production") {
-            sh 'php vendor/nasajon/mdatransformer/bin/convert nasajon:mda:builder --nocache -vvv'
-            sh 'php app/console assets:install --env=prod'
-            sh 'php app/console assetic:dump --env=prod'
-        }
-    }
-
-
-    stage('Tests') {
-        docker.image('postgres:11.5').withRun('-e "POSTGRES_DB=integratto2" -e "POSTGRES_USER=bancosweb"') { c ->
-            docker.image('postgres:11.5').inside("--link ${c.id}:postgres -e POSTGRES_DB=integratto2 -e POSTGRES_USER=bancosweb -e PGPASSWORD=mysecretpassword") {
-                sh "bash $WORKSPACE/vendor/nasajon/bancosweb/run_dump $WORKSPACE/vendor/nasajon/bancosweb/dump"
-            }
-            docker.image('nasajon/php:7.1-fpm-symfony-dev').inside("--link ${c.id}:postgres --env-file $WORKSPACE/common.env -e SYMFONY_DEPRECATIONS_HELPER=disabled -e sp_metadata=vendor/nasajon/login-bundle/Nasajon/LoginBundle/Resources/idp-FederationMetadata.xml -e sp_certificate_crt=vendor/nasajon/login-bundle/Nasajon/LoginBundle/Resources/server.crt -e sp_certificate_pem=vendor/nasajon/login-bundle/Nasajon/LoginBundle/Resources/server.pem") {
-                sh 'app/console doctrine:migrations:migrate --no-interaction'
-                sh 'vendor/codeception/codeception/codecept run --fail-fast --no-colors --xml'
-            }
-        }
-    }
+    def PLAYBOOK = "/opt/devops/Ansible/ci.yml"
     
-    stage('Composer Without Dev Dependencies'){
-        docker.image("nasajon/composer:1.7.2").inside("-v /root/.ssh:/root/.ssh") {
-            sh 'composer install --prefer-dist --optimize-autoloader --no-dev --no-scripts --ignore-platform-reqs'
-        }
-    }
+    stage('Environment Config') {
+        sh "auto_config"
+    }	
 	
-    stage('Docker Ship') {
-		sh "sudo docker build --no-cache --rm -t hub.nasajon.com.br/pastascontabeis:${buildName} ."
-		sh "sudo docker push hub.nasajon.com.br/pastascontabeis:${buildName}"
-		sh "sudo docker rmi -f hub.nasajon.com.br/pastascontabeis:${buildName}"
-	}
-    // if (env.BRANCH_NAME == 'master') {
-    //     withCredentials([string(credentialsId: 'KB_CONFIG_FILE_CONTENT_CONDOMINIO', variable: 'KB_CONFIG_FILE_CONTENT')]) {
-    //         docker.image('nasajon/kubectl').inside("-u root:root --entrypoint='' -e KB_CONFIG_FILE_CONTENT='$KB_CONFIG_FILE_CONTENT'") {
-    //           sh "/exec-kubectl.sh --namespace=pastascontabeis set image deployment api api=hub.nasajon.com.br/pastascontabeis:${buildName} --insecure-skip-tls-verify=true"
-	//       sh "/exec-kubectl.sh --namespace=pastascontabeis set image deployment job job=hub.nasajon.com.br/pastascontabeis:${buildName} --insecure-skip-tls-verify=true"
-	//       sh "/exec-kubectl.sh --namespace=pastascontabeis set image deployment upgrade-db-diario upgrade-db-diario=hub.nasajon.com.br/pastascontabeis:${buildName} --insecure-skip-tls-verify=true"
-	//       sh "/exec-kubectl.sh --namespace=pastascontabeis set image deployment upgrade-db-condominio upgrade-db-condominio=hub.nasajon.com.br/pastascontabeis:${buildName} --insecure-skip-tls-verify=true"    
-    //         }
-    //     }
-
-    //     // emailext(
-    //     //     to: 'cvf@nasajon.com.br',
-    //     //     subject: "Build Publicado em QA: '${env.JOB_NAME} [${env.BUILD_NUMBER}]'",
-    //     //     body: "Build Publicado em QA: '${env.JOB_NAME} [${env.BUILD_NUMBER}]' - Alterações: '${env.BUILD_URL}/changes'"
-    //     // )
-    // }
+    stage('Tests') {
+		
+    }
 
     if (env.BRANCH_NAME == 'master') {
-        // stage('SonarQube analysis') {
-        //     def scannerHome = tool 'SonarQube';
-        //     withSonarQubeEnv('Sonar') {
-        //         sh "${scannerHome}/bin/sonar-scanner"
-        //     }
-	    // }
-
-        stage('Deploy QA'){
+	stage('Deploy QA'){
             sh "ansible-playbook ${PLAYBOOK} -e 'build_path=${WORKSPACE} env=qa'"
         }
     }
-    else if (env.BRANCH_NAME == 'production') {
-        stage('Pipeline Prod'){
+	
+    if (env.BRANCH_NAME == 'production') {
+	stage('Deploy PROD'){
             sh "ansible-playbook ${PLAYBOOK} -e 'build_path=${WORKSPACE} env=prod'"
         }
     }
-    else {
-        stage('Build Docker Image'){
-            sh "ansible-playbook ${PLAYBOOK} -e 'build_path=${WORKSPACE} env=test'"
-        }
-    }    
-
-
-        // emailext(
-        //     to: 'suporte3@nasajon.com.br',
-        //     subject: "Liberação Diário Único em Produção: '${env.JOB_NAME} [${env.BUILD_NUMBER}]'",
-        //     body: "Po favor, liberar em produção o novo build do Diário Único: '${env.JOB_NAME} [${env.BUILD_NUMBER}]' - Alterações: '${env.BUILD_URL}/changes'"
-        // )
-    
+   
+	
 }
